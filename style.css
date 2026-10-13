@@ -121,7 +121,9 @@ b{ font-weight:600; }
 
 .ob-viewport{ overflow:hidden; margin:18px -8px 0; padding:6px 8px 8px; }
 .ob-track{ display:flex; transition:transform .7s var(--ease); will-change:transform; }
-.step{ flex:0 0 100%; min-width:0; }
+.step{ flex:0 0 100%; min-width:0; transition:opacity .5s var(--ease); }
+.step[inert]{ opacity:0; }                                  /* hides the neighbouring steps so nothing peeks in at the edges */
+.step:not([inert]){ transition-delay:.12s; }
 .step h2{ font-family:var(--font-display); font-weight:500; font-size:1.7rem; line-height:1.15; margin-bottom:8px; letter-spacing:-.01em; }
 .step > .muted{ margin-bottom:6px; max-width:52ch; }
 .consent-box{
