@@ -871,6 +871,86 @@ setInterval(() => {
   store.set('vitals', vitals);
 }, 8000);
 
+/* ---------------- falling leaves from a tree (decorative) ---------------- */
+(function fallingLeaves(){
+  const cv = $('leaves');
+  if(!cv || !cv.getContext || reduce.matches) return;   // reduced motion: no ambient movement at all
+  const ctx = cv.getContext('2d');
+  const PALETTE = ['#7FAF95', '#A3C49A', '#D7B06E', '#E0A3AE', '#9FBFB0'];
+  const rnd = (a, b) => a + Math.random() * (b - a);
+  let W = 0, H = 0, tips = [], branches = [], leaves = [], last = 0, t = 0;
+
+  // A branch that grows from the top-right corner and splits until it ends in a canopy tip.
+  function grow(x, y, ang, len, depth){
+    const x2 = x + Math.cos(ang) * len, y2 = y + Math.sin(ang) * len;
+    branches.push({ x1: x, y1: y, x2, y2, w: Math.max(.6, depth * 1.2) });
+    if(depth === 0){ tips.push({ x: x2, y: y2 }); return; }
+    grow(x2, y2, ang - rnd(.28, .5), len * rnd(.66, .74), depth - 1);
+    grow(x2, y2, ang + rnd(.22, .45), len * rnd(.64, .72), depth - 1);
+  }
+  function buildTree(){
+    branches = []; tips = [];
+    const len = Math.min(W, H) * .2;
+    grow(W - Math.min(W * .1, 120), -8, Math.PI / 2 + .25, len, 5);
+  }
+
+  // A leaf is born at one of the canopy tips (or anywhere on the first frame) and drifts down.
+  function spawn(first){
+    const tip = tips.length ? tips[Math.floor(Math.random() * tips.length)] : { x: W * .85, y: 90 };
+    return {
+      bx: first ? rnd(0, W) : tip.x + rnd(-24, 24),
+      y:  first ? rnd(0, H) : tip.y + rnd(-8, 12),
+      vy: rnd(26, 50),                       // pixels per second
+      sway: rnd(0, Math.PI * 2), amp: rnd(8, 22), fq: rnd(.5, 1.1),
+      rot: rnd(0, Math.PI * 2), vr: rnd(-1.3, 1.3),
+      s: rnd(5, 8), c: PALETTE[Math.floor(Math.random() * PALETTE.length)], o: rnd(.45, .75)
+    };
+  }
+
+  function frame(now){
+    const dt = Math.min(.05, (now - (last || now)) / 1000); last = now; t += dt;
+    ctx.clearRect(0, 0, W, H);
+
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = 'rgba(46,96,88,.14)';
+    for(const b of branches){
+      ctx.lineWidth = b.w;
+      ctx.beginPath(); ctx.moveTo(b.x1, b.y1); ctx.lineTo(b.x2, b.y2); ctx.stroke();
+    }
+
+    for(let i = 0; i < leaves.length; i++){
+      const L = leaves[i];
+      L.y += L.vy * dt;
+      L.rot += L.vr * dt;
+      if(L.y > H + 16){ leaves[i] = spawn(false); continue; }
+      const x = L.bx + Math.sin(t * L.fq + L.sway) * L.amp;
+      ctx.save();
+      ctx.globalAlpha = L.o;
+      ctx.translate(x, L.y); ctx.rotate(L.rot);
+      ctx.fillStyle = L.c;
+      ctx.beginPath(); ctx.ellipse(0, 0, L.s, L.s * .5, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = 'rgba(255,255,255,.6)'; ctx.lineWidth = .7;
+      ctx.beginPath(); ctx.moveTo(-L.s * .8, 0); ctx.lineTo(L.s * .8, 0); ctx.stroke();
+      ctx.restore();
+    }
+    requestAnimationFrame(frame);
+  }
+
+  function size(){
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    W = window.innerWidth; H = window.innerHeight;
+    cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    buildTree();
+    const n = Math.round(Math.max(8, Math.min(18, W / 80)));
+    leaves = Array.from({ length: n }, () => spawn(true));
+  }
+  let resizeT = 0;
+  window.addEventListener('resize', () => { clearTimeout(resizeT); resizeT = setTimeout(size, 150); });
+  size();
+  requestAnimationFrame(frame);
+})();
+
 /* boot */
 showStep(0);
 if(profile){ enterApp(false); loadSettings(); }
