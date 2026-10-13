@@ -900,10 +900,10 @@ setInterval(() => {
     return {
       bx: first ? rnd(0, W) : tip.x + rnd(-24, 24),
       y:  first ? rnd(0, H) : tip.y + rnd(-8, 12),
-      vy: rnd(26, 50),                       // pixels per second
-      sway: rnd(0, Math.PI * 2), amp: rnd(8, 22), fq: rnd(.5, 1.1),
+      vy: rnd(24, 44),                       // pixels per second
+      sway: rnd(0, Math.PI * 2), amp: rnd(10, 26), fq: rnd(.5, 1.1),
       rot: rnd(0, Math.PI * 2), vr: rnd(-1.3, 1.3),
-      s: rnd(5, 8), c: PALETTE[Math.floor(Math.random() * PALETTE.length)], o: rnd(.45, .75)
+      s: rnd(10, 15), c: PALETTE[Math.floor(Math.random() * PALETTE.length)], o: rnd(.75, .95)
     };
   }
 
@@ -912,9 +912,9 @@ setInterval(() => {
     ctx.clearRect(0, 0, W, H);
 
     ctx.lineCap = 'round';
-    ctx.strokeStyle = 'rgba(46,96,88,.14)';
+    ctx.strokeStyle = 'rgba(46,96,88,.32)';
     for(const b of branches){
-      ctx.lineWidth = b.w;
+      ctx.lineWidth = b.w * 1.4;
       ctx.beginPath(); ctx.moveTo(b.x1, b.y1); ctx.lineTo(b.x2, b.y2); ctx.stroke();
     }
 
@@ -942,7 +942,7 @@ setInterval(() => {
     cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     buildTree();
-    const n = Math.round(Math.max(8, Math.min(18, W / 80)));
+    const n = Math.round(Math.max(7, Math.min(12, W / 110)));
     leaves = Array.from({ length: n }, () => spawn(true));
   }
   let resizeT = 0;
