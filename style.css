@@ -119,9 +119,11 @@ b{ font-weight:600; }
 .ob-progress{ height:3px; border-radius:3px; background:var(--line); overflow:hidden; }
 .ob-progress i{ display:block; height:100%; width:25%; background:var(--accent); border-radius:3px; transition:width .7s var(--ease); }
 
-.ob-viewport{ overflow:hidden; margin:18px -8px 0; padding:6px 8px 8px; }
+/* The window clips exactly at its own edge (no padding), so the next step starts outside it and
+   nothing can peek in. The breathing room for focus rings lives inside each step instead. */
+.ob-viewport{ overflow:hidden; margin:18px -8px 0; padding:0; }
 .ob-track{ display:flex; transition:transform .7s var(--ease); will-change:transform; }
-.step{ flex:0 0 100%; min-width:0; transition:opacity .5s var(--ease); }
+.step{ flex:0 0 100%; min-width:0; padding:6px 8px 8px; transition:opacity .5s var(--ease); }
 .step[inert]{ opacity:0; }                                  /* hides the neighbouring steps so nothing peeks in at the edges */
 .step:not([inert]){ transition-delay:.12s; }
 .step h2{ font-family:var(--font-display); font-weight:500; font-size:1.7rem; line-height:1.15; margin-bottom:8px; letter-spacing:-.01em; }
