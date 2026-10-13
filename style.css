@@ -141,6 +141,9 @@ b{ font-weight:600; }
 
 .mobile-top{ display:none; }
 
+/* falling leaves: sits behind the cards, so it shows through the open background only */
+#leaves{ position:fixed; inset:0; width:100%; height:100%; pointer-events:none; z-index:-1; }
+
 .rail{
   position:sticky; top:0; height:100vh; display:flex; flex-direction:column; gap:28px; padding:26px 14px 18px;
   background:var(--paper); border-right:1px solid var(--line);
