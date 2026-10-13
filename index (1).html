@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>sahara. | Continuous trauma healing and distress monitoring</title>
+<meta name="description" content="Sahara is a consent-driven companion that listens, tracks stress signals and guides survivors toward help." />
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400;1,6..72,500&family=Noto+Sans+Devanagari:wght@400;600&family=Noto+Sans+Tamil:wght@400;600&family=Noto+Sans+Bengali:wght@400;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- Reusable lotus mark -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="lotus" viewBox="0 0 24 24">
+    <path d="M12 3.5c2.6 2.7 3.4 5.6 0 10.5-3.4-4.9-2.6-7.8 0-10.5z" />
+    <path d="M3.5 9c3.2-.1 6.2 1.9 8.5 5-3.2 1.6-6.9.6-8.5-5z" />
+    <path d="M20.5 9c-3.2-.1-6.2 1.9-8.5 5 3.2 1.6 6.9.6 8.5-5z" />
+    <path d="M6 17c1.9 1.9 3.9 2.9 6 2.9s4.1-1 6-2.9" />
+  </symbol>
+</svg>
+
+<!-- ================= ONBOARDING ================= -->
+<div id="onboard">
+  <div class="ob-wrap">
+    <div class="ob-top">
+      <div class="brand"><svg class="lotus-mark"><use href="#lotus" /></svg><span>sahara.</span></div>
+      <span class="badge">SIH 26094 prototype</span>
+    </div>
+
+    <div class="ob-main">
+      <h1>Your continuous healing companion.</h1>
+      <p class="lede">A compassionate space for victims of violence and severe life atrocities. Everything stays on your device in this prototype.</p>
+
+      <div class="ob-progress" role="presentation"><i id="obBar"></i></div>
+
+      <div class="ob-viewport" id="obViewport">
+        <div class="ob-track" id="obTrack">
+
+          <!-- Step 0: name -->
+          <div class="step" id="s0">
+            <h2>Let's begin with you</h2>
+            <p class="muted">What should Sahara call you? You can use any name you like.</p>
+            <div class="field"><label for="obName">Your name or a nickname</label><input class="input" type="text" id="obName" placeholder="e.g. Aarav, Meera, or Friend" autocomplete="off" maxlength="40" /></div>
+            <div class="field"><label for="obLang">Preferred language</label>
+              <select class="input" id="obLang">
+                <option value="en">English</option>
+                <option value="hi">हिन्दी (Hindi)</option>
+                <option value="ta">தமிழ் (Tamil)</option>
+                <option value="bn">বাংলা (Bengali)</option>
+                <option value="mr">मराठी (Marathi)</option>
+              </select>
+            </div>
+            <div class="nav-row"><span></span><button class="btn" onclick="obNext()">Continue</button></div>
+          </div>
+
+          <!-- Step 1: consent -->
+          <div class="step" id="s1" inert>
+            <h2>Listening to the body, only with your permission</h2>
+            <p class="muted">Sahara can read heart-rate and sleep signals from your smartwatch (via Google Fit) to understand physical stress responses. This is <b>strictly consent-driven</b> and you can revoke it anytime.</p>
+            <label class="consent-box">
+              <input type="checkbox" id="obConsent" />
+              <span>I give explicit consent for Sahara to read my health telemetry (heart rate, sleep) and process it privately to detect distress patterns.</span>
+            </label>
+            <div class="nav-row"><button class="btn btn-quiet" onclick="obPrev()">Back</button><button class="btn" onclick="obNext()">Continue</button></div>
+          </div>
+
+          <!-- Step 2: safety net -->
+          <div class="step" id="s2" inert>
+            <h2>Your safety net</h2>
+            <p class="muted">If Sahara notices you slipping, it can quietly offer these contacts. They are never contacted without your tap.</p>
+            <div class="field"><label for="obFrName">Trusted person (name)</label><input class="input" type="text" id="obFrName" placeholder="e.g. Didi or Rahul" autocomplete="off" /></div>
+            <div class="field"><label for="obFrPhone">Their phone number</label><input class="input" type="tel" id="obFrPhone" placeholder="+91 ..." autocomplete="off" /></div>
+            <div class="field"><label for="obThPhone">Therapist or clinic number (optional)</label><input class="input" type="tel" id="obThPhone" placeholder="+91 ..." autocomplete="off" /></div>
+            <div class="nav-row"><button class="btn btn-quiet" onclick="obPrev()">Back</button><button class="btn" onclick="obNext()">Continue</button></div>
+          </div>
+
+          <!-- Step 3: AI -->
+          <div class="step" id="s3" inert>
+            <h2>Meet your AI companion</h2>
+            <p class="muted">Sahara's brain is an AI model. Paste an API key from any OpenAI-compatible provider (OpenAI, Groq, OpenRouter, Together). No key? Sahara still works with its built-in offline empathetic engine.</p>
+            <div class="field"><label for="obApiBase">API base URL</label><input class="input" type="text" id="obApiBase" placeholder="https://api.openai.com/v1" autocomplete="off" /></div>
+            <div class="field"><label for="obModel">Model name</label><input class="input" type="text" id="obModel" placeholder="gpt-4o-mini or llama-3.1-8b-instant" autocomplete="off" /></div>
+            <div class="field"><label for="obApiKey">API key (stored only in your browser)</label><input class="input" type="password" id="obApiKey" placeholder="sk-..." autocomplete="off" /></div>
+            <div class="nav-row">
+              <button class="btn btn-quiet" onclick="obPrev()">Back</button>
+              <button class="btn" onclick="finishOnboard()">Begin healing journey</button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= APP ================= -->
+<div id="app">
+
+  <!-- Phone-only top bar -->
+  <header class="mobile-top">
+    <div class="brand"><svg class="lotus-mark"><use href="#lotus" /></svg><span>sahara.</span></div>
+    <div class="mt-right">
+      <button class="btn btn-safety btn-sm js-sos">Safety Hub</button>
+      <button class="avatar-btn" id="meBtnM" aria-label="Open your profile"><span class="avatar" id="avatarM">S</span></button>
+    </div>
+  </header>
+
+  <aside class="rail">
+    <div class="brand"><svg class="lotus-mark"><use href="#lotus" /></svg><span>sahara.</span></div>
+
+    <nav id="tabs" aria-label="Main">
+      <span class="nav-pill" id="navPill" aria-hidden="true"></span>
+      <button data-view="dash" class="active" aria-current="page">
+        <svg viewBox="0 0 24 24"><path d="M3 18h18M7 18a5 5 0 0 1 10 0M12 5v3M5.6 9.6l1.8 1.8M18.4 9.6l-1.8 1.8"/></svg><span>Dashboard</span>
+      </button>
+      <button data-view="chat">
+        <svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/></svg><span>Companion</span>
+      </button>
+      <button data-view="checkin">
+        <svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg><span><span class="long">Daily check-in</span><span class="short">Check-in</span></span>
+      </button>
+      <button data-view="report">
+        <svg viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6zM14 3v4h4M9 12h6M9 16h6"/></svg><span><span class="long">Journey report</span><span class="short">Report</span></span>
+      </button>
+      <button data-view="settings">
+        <svg viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h2M10 17h10M14 4v6M6 14v6"/></svg><span>Settings</span>
+      </button>
+    </nav>
+
+    <div class="rail-foot">
+      <button class="btn btn-safety js-sos">
+        <svg viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/></svg>Safety Hub
+      </button>
+      <button class="me" id="meBtn" aria-label="Open your profile">
+        <span class="avatar" id="avatar">S</span>
+        <span class="me-text"><b id="railName">Friend</b><small>Edit profile</small></span>
+      </button>
+    </div>
+  </aside>
+
+  <main>
+    <div class="stage" id="stage">
+
+      <!-- ===== DASHBOARD ===== -->
+      <section class="view active" id="view-dash">
+        <div class="greet">
+          <div class="greet-text">
+            <h1>Good <span id="daypart">morning</span>, <span id="dashName">Friend</span></h1>
+            <p class="muted">Your body has been talking to Sahara. Telemetry is simulated from Google Fit in this prototype, and only read with your consent.</p>
+          </div>
+          <div class="gauge-card">
+            <div class="gauge-top"><span class="k">Stress index today</span><span id="stStressPill"></span></div>
+            <div class="gauge-num"><span class="num" id="stStress">0</span><small>out of 100</small></div>
+            <div class="gauge" id="gauge" role="meter" aria-label="Stress index" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i class="marker" id="gaugeMarker"></i></div>
+            <div class="gauge-scale" aria-hidden="true"><span style="flex:45">Calm</span><span style="flex:20">Elevated</span><span style="flex:35">High</span></div>
+          </div>
+        </div>
+
+        <div class="vitals">
+          <div class="vital"><div class="k">Resting heart rate</div><div class="v"><span class="num" id="stHr">0</span><small>bpm</small></div><div class="d" id="stHrD">vs your 7-day baseline</div></div>
+          <div class="vital"><div class="k">Sleep last night</div><div class="v"><span class="num" id="stSleep">0</span><small>hrs</small></div><div class="d">across tracked cycles</div></div>
+          <div class="vital"><div class="k">Healing streak</div><div class="v"><span class="num" id="stStreak">0</span><small>days</small></div><div class="d">consecutive check-ins</div></div>
+        </div>
+
+        <h2 class="section-title">Your emotional peaks and valleys</h2>
+        <div class="grid g2">
+          <div class="panel"><h3 class="panel-title">Stress index, last 7 days</h3><div class="chart-box"><canvas id="chartStress" aria-label="Line chart of stress index over the last seven days" role="img"></canvas></div></div>
+          <div class="panel"><h3 class="panel-title">Heart rate in bpm, last 7 days</h3><div class="chart-box"><canvas id="chartHr" aria-label="Line chart of heart rate over the last seven days" role="img"></canvas></div></div>
+        </div>
+
+        <div class="note-band">
+          <svg class="lotus-mark"><use href="#lotus" /></svg>
+          <div>
+            <h3>Today's gentle suggestion</h3>
+            <p id="suggestionTxt">Loading your suggestion…</p>
+          </div>
+          <button class="btn" onclick="go('chat')">Talk to Sahara</button>
+        </div>
+      </section>
+
+      <!-- ===== CHAT ===== -->
+      <section class="view" id="view-chat">
+        <h1 class="page-title">Your companion</h1>
+        <p class="page-sub">Empathetic conversation in your language, by voice or text. Sahara listens without judgement.</p>
+        <div id="chatWrap">
+          <div class="panel chat-card">
+            <div class="chat-head">
+              <div class="ai-dot"><svg class="lotus-mark"><use href="#lotus" /></svg></div>
+              <div><div class="nm">Sahara</div><div class="st" id="aiStatus">Online</div></div>
+              <div class="tts">
+                <span class="small muted" id="ttsLabel">Voice replies</span>
+                <label class="switch"><input type="checkbox" id="ttsToggle" checked aria-label="Voice replies"><span class="slider"></span></label>
+              </div>
+            </div>
+            <div id="msgs" aria-live="polite"></div>
+            <div class="chat-input">
+              <button class="icon-btn" id="micBtn" title="Speak" aria-label="Speak your message">
+                <svg viewBox="0 0 24 24"><path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3zM5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
+              </button>
+              <input class="input" id="chatInput" placeholder="Type or say what's on your mind…" autocomplete="off" aria-label="Message" />
+              <button class="icon-btn send" id="sendBtn" aria-label="Send message">
+                <svg viewBox="0 0 24 24"><path d="M4 12l16-8-6 16-3-7z"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="side-stack">
+            <div class="panel side-card">
+              <h3 class="panel-title">Instant relief</h3>
+              <div class="chips">
+                <button class="chip" onclick="doGrounding('box')">Box breathing</button>
+                <button class="chip" onclick="doGrounding('54321')">5-4-3-2-1 grounding</button>
+                <button class="chip" onclick="doGrounding('body')">Body scan</button>
+                <button class="chip chip-alert" onclick="openModal()">I need someone now</button>
+              </div>
+            </div>
+            <div class="panel side-card">
+              <h3 class="panel-title">What Sahara is doing</h3>
+              <p class="small muted" id="engineNote">Sahara starts with gentle check-ins. It compares your words and heart rate against your distress profile, and softly pivots to grounding if it sees a downward spiral.</p>
+            </div>
+            <div class="panel side-card">
+              <h3 class="panel-title">Speaking your language</h3>
+              <p class="small muted">Replying in <b id="langNote">English</b>. Change it in Settings.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== CHECK-IN ===== -->
+      <section class="view" id="view-checkin">
+        <h1 class="page-title">Daily check-in</h1>
+        <p class="page-sub">One honest minute a day. It builds the report your doctor will thank you for.</p>
+        <div class="grid g2">
+          <div class="panel">
+            <h3 class="panel-title">How is your heart feeling today?</h3>
+            <div class="mood-row" id="moodRow">
+              <button data-m="1" aria-label="Very low">😢</button>
+              <button data-m="2" aria-label="Low">😕</button>
+              <button data-m="3" aria-label="Okay">😐</button>
+              <button data-m="4" aria-label="Good">🙂</button>
+              <button data-m="5" aria-label="Great">😊</button>
+            </div>
+            <div class="field"><label for="stressRange">Physical stress level: <b id="stressVal">40</b> out of 100</label>
+              <input type="range" id="stressRange" min="0" max="100" value="40" /></div>
+            <div class="field"><label for="noteInput">Anything you'd like to note today? (optional)</label>
+              <input class="input" type="text" id="noteInput" placeholder="A word, a memory, anything…" autocomplete="off" /></div>
+            <button class="btn btn-wide" id="saveCheckin">Save today's check-in</button>
+          </div>
+          <div class="panel">
+            <h3 class="panel-title">Your journey so far</h3>
+            <div class="timeline" id="checkinTimeline"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== REPORT ===== -->
+      <section class="view" id="view-report">
+        <h1 class="page-title">Journey report</h1>
+        <p class="page-sub">An easy-to-read summary you can share with a professional. It saves hours of clinical intake.</p>
+        <div class="grid g2">
+          <div class="panel">
+            <div class="panel-head">
+              <h3 class="panel-title">14-day structured summary</h3>
+              <button class="btn btn-quiet btn-sm" id="genReport">Regenerate</button>
+            </div>
+            <div class="report-sheet" id="reportBox">Generating…</div>
+            <button class="btn btn-quiet btn-sm" style="margin-top:14px" onclick="downloadReport()">Download for your therapist</button>
+          </div>
+          <div class="side-stack">
+            <div class="panel"><h3 class="panel-title">Distress profile, 14-day stress index</h3><div class="chart-box tall"><canvas id="chartStressLong" aria-label="Line chart of stress index over fourteen days" role="img"></canvas></div></div>
+            <div class="panel"><h3 class="panel-title">How the escalation engine sees you right now</h3>
+              <div id="tierBox" class="small"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== SETTINGS ===== -->
+      <section class="view" id="view-settings">
+        <h1 class="page-title">Settings</h1>
+        <p class="page-sub">Dignity, autonomy and safety. You are always in control.</p>
+        <div class="grid g2">
+          <div class="panel">
+            <h3 class="panel-title">Privacy and consent</h3>
+            <div class="set-row"><div><div class="t">Health telemetry (Google Fit)</div><div class="s">Heart rate and sleep tracking</div></div>
+              <label class="switch"><input type="checkbox" id="setConsent" aria-label="Health telemetry"><span class="slider"></span></label></div>
+            <div class="set-row"><div><div class="t">Spoken replies</div><div class="s">Sahara reads its messages aloud</div></div>
+              <label class="switch"><input type="checkbox" id="setTts" aria-label="Spoken replies"><span class="slider"></span></label></div>
+            <p class="small muted" style="margin-top:14px">All data lives in this browser's local storage. This prototype never uploads your data. The AI provider only sees what you type in chat.</p>
+          </div>
+
+          <div class="panel">
+            <h3 class="panel-title">AI configuration</h3>
+            <div class="field"><label for="setApiBase">API base URL (OpenAI-compatible)</label><input class="input" type="text" id="setApiBase" autocomplete="off"></div>
+            <div class="field"><label for="setModel">Model</label><input class="input" type="text" id="setModel" autocomplete="off"></div>
+            <div class="field"><label for="setApiKey">API key</label><input class="input" type="password" id="setApiKey" autocomplete="off"></div>
+            <div class="field"><label for="setLang">Language</label>
+              <select class="input" id="setLang">
+                <option value="en">English</option><option value="hi">हिन्दी</option><option value="ta">தமிழ்</option><option value="bn">বাংলা</option><option value="mr">मराठी</option>
+              </select></div>
+            <button class="btn btn-sm" id="saveSettings">Save AI settings</button>
+          </div>
+
+          <div class="panel">
+            <h3 class="panel-title">Safety net contacts</h3>
+            <div class="field"><label for="setFr">Trusted person</label><input class="input" type="text" id="setFr" autocomplete="off"></div>
+            <div class="field"><label for="setFrP">Trusted person's number</label><input class="input" type="tel" id="setFrP" autocomplete="off"></div>
+            <div class="field"><label for="setThP">Therapist or clinic number</label><input class="input" type="tel" id="setThP" autocomplete="off"></div>
+            <button class="btn btn-sm" id="saveContacts">Save contacts</button>
+          </div>
+
+          <div class="panel">
+            <h3 class="panel-title">Prototype tools</h3>
+            <div class="set-row"><div><div class="t">Simulate a distress episode</div><div class="s">Injects a bad week into telemetry to demo the escalation engine</div></div>
+              <button class="btn btn-quiet btn-sm" id="btnSim">Simulate</button></div>
+            <div class="set-row"><div><div class="t">Reset everything</div><div class="s">Clear profile, chats and telemetry</div></div>
+              <button class="btn btn-safety btn-sm" id="btnReset">Reset app</button></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== PROFILE ===== -->
+      <section class="view" id="view-profile">
+        <h1 class="page-title">Your profile</h1>
+        <p class="page-sub">How Sahara knows you. Your name and photo stay on this device.</p>
+        <div class="profile-grid">
+          <div class="panel pf-card">
+            <div class="pf-avatar-wrap">
+              <div class="avatar xl" id="pfAvatar">S</div>
+              <button class="cam" id="pfCam" aria-label="Change photo">
+                <svg viewBox="0 0 24 24"><path d="M4 8h3l1.5-2h7L17 8h3v11H4zM12 17a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z"/></svg>
+              </button>
+            </div>
+            <div class="pf-name" id="pfNameLive">Friend</div>
+            <div class="muted small" id="pfSince">On Sahara since today</div>
+            <div class="pf-actions">
+              <button class="btn btn-quiet btn-sm" id="pfChange">Change photo</button>
+              <button class="btn btn-quiet btn-sm" id="pfRemove">Remove photo</button>
+            </div>
+            <input type="file" id="pfFile" accept="image/*" hidden />
+            <div class="pf-stats">
+              <div><span id="pfCheckins">0</span><small>check-ins</small></div>
+              <div><span id="pfStreak">0</span><small>day streak</small></div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <h3 class="panel-title">Details</h3>
+            <div class="field"><label for="pfName">Name Sahara calls you</label>
+              <input class="input" type="text" id="pfName" maxlength="40" autocomplete="off" />
+              <p class="small err" id="pfErr" hidden>Add a name so Sahara knows what to call you.</p>
+            </div>
+            <div class="field"><span class="lbl">Avatar colour</span>
+              <div class="swatches" id="pfSwatches" role="group" aria-label="Avatar colour"></div>
+              <p class="small muted" style="margin-top:8px">Shown behind your initial when you don't have a photo.</p>
+            </div>
+            <p class="small muted">Language and trusted contacts live in <button class="link" type="button" onclick="go('settings')">Settings</button>.</p>
+            <div class="pf-save">
+              <button class="btn btn-quiet" id="pfDiscard" disabled>Discard</button>
+              <button class="btn" id="pfSave" disabled>Save changes</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+</div>
+
+<!-- ================= SAFETY MODAL ================= -->
+<div class="overlay" id="modalBg">
+  <div class="sheet" id="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <h2 id="modalTitle">The Action Hub</h2>
+    <p class="muted" id="modalMsg">You don't have to carry this alone. Choose what feels safest right now. Nothing happens unless you tap it.</p>
+    <div id="breatheWrap"><div class="breathe-circle"></div><p class="small muted">Breathe in, hold, breathe out. Follow the circle. You are safe in this moment.</p></div>
+    <div class="actions">
+      <button class="btn" id="actFriend">Call a trusted person</button>
+      <button class="btn" id="actTherapist">Call my therapist or clinic</button>
+      <button class="btn btn-safety" id="actEmergency">Emergency services (112)</button>
+      <button class="btn btn-quiet" id="actBreathe">Guide me through breathing first</button>
+      <button class="btn btn-quiet" onclick="closeModal()">I'm okay for now</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= PHOTO CROP ================= -->
+<div class="overlay" id="cropBg">
+  <div class="sheet" id="cropSheet" role="dialog" aria-modal="true" aria-labelledby="cropTitle">
+    <h2 id="cropTitle">Adjust your photo</h2>
+    <p class="muted small">Drag the photo to reposition it. Use the slider to zoom.</p>
+    <div class="crop-stage" id="cropStage" tabindex="0" aria-label="Photo position. Use arrow keys to move and plus or minus to zoom.">
+      <canvas id="cropCanvas" width="560" height="560"></canvas>
+    </div>
+    <label class="zoom"><span class="small muted">Zoom</span><input type="range" id="cropZoom" min="100" max="300" value="100" /></label>
+    <div class="row-actions">
+      <button class="btn btn-quiet" id="cropCancel">Cancel</button>
+      <button class="btn" id="cropOk">Use photo</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="script.js"></script>
+</body>
+</html>
