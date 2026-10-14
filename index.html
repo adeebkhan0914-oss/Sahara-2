@@ -121,10 +121,13 @@
         <svg viewBox="0 0 24 24"><path d="M3 18h18M7 18a5 5 0 0 1 10 0M12 5v3M5.6 9.6l1.8 1.8M18.4 9.6l-1.8 1.8"/></svg><span>Dashboard</span>
       </button>
       <button data-view="chat">
-        <svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/></svg><span>Companion</span>
+        <svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/></svg><span><span class="long">Companion</span><span class="short">Chat</span></span>
       </button>
       <button data-view="checkin">
         <svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg><span><span class="long">Daily check-in</span><span class="short">Check-in</span></span>
+      </button>
+      <button data-view="exercises">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.5"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/></svg><span><span class="long">Stress relief</span><span class="short">Relief</span></span>
       </button>
       <button data-view="report">
         <svg viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6zM14 3v4h4M9 12h6M9 16h6"/></svg><span><span class="long">Journey report</span><span class="short">Report</span></span>
@@ -256,6 +259,59 @@
           <div class="panel">
             <h3 class="panel-title">Your journey so far</h3>
             <div class="timeline" id="checkinTimeline"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== STRESS RELIEF ===== -->
+      <section class="view" id="view-exercises">
+        <h1 class="page-title">Stress relief</h1>
+        <p class="page-sub">Five short exercises. Try one or all five today. Each one runs on its own timer, and you can pause at any moment.</p>
+
+        <div id="exHome">
+          <div class="panel ex-progress">
+            <div>
+              <h3 class="panel-title">Today</h3>
+              <p class="ex-progress-txt" id="exProgTxt">0 of 5 done</p>
+            </div>
+            <div class="ex-dots" id="exDots" aria-hidden="true"></div>
+          </div>
+          <div class="ex-list" id="exList"></div>
+        </div>
+
+        <div class="panel ex-session" id="exSession" hidden>
+          <div id="exIntro">
+            <p class="ex-no" id="exIntroNo"></p>
+            <h2 class="ex-name" id="exIntroName"></h2>
+            <p class="ex-desc" id="exIntroDesc"></p>
+            <ol class="ex-how" id="exIntroHow"></ol>
+            <p class="ex-meta" id="exIntroMeta"></p>
+            <div class="ex-actions">
+              <button class="btn" id="exReady">Ready</button>
+              <button class="btn btn-quiet" id="exBack">Back</button>
+            </div>
+          </div>
+
+          <div id="exRun" hidden>
+            <p class="ex-no" id="exRunName"></p>
+            <div class="ex-stage" aria-hidden="true"><div class="ex-circle" id="exCircle"></div></div>
+            <p class="ex-cue" id="exCue" aria-live="polite"></p>
+            <p class="ex-sub" id="exSub"></p>
+            <p class="ex-count" id="exCount"></p>
+            <div class="ex-bar"><span id="exBar"></span></div>
+            <div class="ex-actions">
+              <button class="btn" id="exPause">Pause</button>
+              <button class="btn btn-quiet" id="exStop">Stop</button>
+            </div>
+          </div>
+
+          <div id="exDone" hidden>
+            <p class="ex-no">Done</p>
+            <h2 class="ex-name">Well done.</h2>
+            <p class="ex-desc" id="exDoneTxt"></p>
+            <div class="ex-actions">
+              <button class="btn" id="exDoneBtn">Back to exercises</button>
+            </div>
           </div>
         </div>
       </section>
