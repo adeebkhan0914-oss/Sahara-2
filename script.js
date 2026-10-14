@@ -162,7 +162,7 @@ function enterApp(animate){
 }
 
 /* ---------------- navigation (views slide like slots) ---------------- */
-const ORDER = ['dash','chat','checkin','report','settings','profile'];
+const ORDER = ['dash','chat','checkin','exercises','report','settings','profile'];
 let curView = 'dash', endTransition = null;
 
 function movePill(instant){
@@ -192,6 +192,8 @@ function afterShow(view){
 function go(view){
   if(!ORDER.includes(view)) return;
   if(view === 'profile' && (!draft || !profileDirty())) loadProfileForm();
+  if(view !== 'exercises') pauseExercise();              // leaving the page pauses a running session
+  if(view === 'exercises') renderExercises();
   if(endTransition) endTransition();                     // settle any slide still in flight
   setNavActive(view);
   if(view === curView) return;
@@ -950,6 +952,247 @@ setInterval(() => {
   size();
   requestAnimationFrame(frame);
 })();
+
+/* ---------------- stress relief exercises ----------------
+   Five daily exercises. Each session has a Ready screen, a timer that can be
+   paused at any time, and a daily log kept in localStorage ("exlog").      */
+const EX_ROUNDS = 4;
+const EXERCISES = [
+  { id:'box', name:'Box breathing', len:'About 1 min', tag:'Slow, even breaths',
+    intro:'Breathe in a square: four counts in, hold, out, hold. The circle grows as you breathe in and shrinks as you breathe out.',
+    how:['Sit up tall and let your shoulders drop.','Follow the circle and match it to your breath.','Repeat for four rounds.'],
+    visual:'breath',
+    build(){
+      const out = [];
+      for(let r = 1; r <= EX_ROUNDS; r++){
+        const sub = `Round ${r} of ${EX_ROUNDS}`;
+        out.push({cue:'Breathe in',  ms:4000, s:1,    sub});
+        out.push({cue:'Hold',        ms:4000, s:1,    sub});
+        out.push({cue:'Breathe out', ms:4000, s:0.55, sub});
+        out.push({cue:'Hold',        ms:4000, s:0.55, sub});
+      }
+      return out;
+    }},
+  { id:'pmr', name:'Progressive muscle relaxation', len:'About 1 min', tag:'Tense, then let go',
+    intro:'Squeeze one group of muscles at a time, then let it melt. Tension and release teach your body the difference.',
+    how:['Sit or lie down somewhere comfortable.','Squeeze each area for 5 seconds, then release for 6.','Notice how the release feels.'],
+    visual:'breath',
+    build(){
+      const groups = [
+        'Feet: curl your toes',
+        'Legs: press your thighs and calves down',
+        'Hands: make tight fists',
+        'Shoulders: lift them up to your ears',
+        'Face and jaw: scrunch your face, clench gently'
+      ];
+      const out = [];
+      groups.forEach((g, i) => {
+        const sub = `Area ${i+1} of ${groups.length}`;
+        out.push({cue:'Squeeze. ' + g, ms:5000, s:0.7, sub});
+        out.push({cue:'Release and let it melt', ms:6000, s:1, sub});
+      });
+      return out;
+    }},
+  { id:'ground', name:'5-4-3-2-1 grounding', len:'About 1 min', tag:'Come back to the room',
+    intro:'Anchor yourself in the present, one sense at a time. Name each thing out loud or in your head.',
+    how:['Look around and name 5 things you can see.','Then 4 things you can feel, 3 you can hear, 2 you can smell, 1 you can taste.','Take your time. There is no rush.'],
+    visual:'none',
+    build(){
+      return [
+        {cue:'See 5 things', ms:12000, sub:'Name them slowly'},
+        {cue:'Feel 4 things', ms:12000, sub:'Your feet, your seat, the air, your clothes'},
+        {cue:'Hear 3 things', ms:12000, sub:'Near you, then further away'},
+        {cue:'Smell 2 things', ms:12000, sub:'Or imagine two smells you like'},
+        {cue:'Taste 1 thing', ms:12000, sub:'Notice whatever is in your mouth'}
+      ];
+    }},
+  { id:'pose', name:"Child's pose", len:'About 1.5 min', tag:'Slow breaths, forward fold',
+    intro:'Kneel, fold forward and breathe slowly into your back. Let the exhale be a little longer than the inhale.',
+    how:['Kneel, sit your hips back toward your heels, and fold forward with your arms long.','Rest your forehead down, or onto a cushion.','Breathe slowly and let each out-breath soften you.'],
+    visual:'breath',
+    build(){
+      const out = [];
+      for(let i = 0; i < 15; i++){
+        const inhale = i % 2 === 0;
+        out.push({cue: inhale ? 'Breathe in, slowly' : 'Breathe out, longer', ms:6000, s: inhale ? 1 : 0.55, sub:`Breath ${Math.floor(i/2)+1} of 8`});
+      }
+      return out;
+    }},
+  { id:'walk', name:'Shake out or walk', len:'1 min shake-out', tag:'Move the tension out',
+    intro:'Shake the stress out of your body. If you can, a brisk 10 to 15 minute walk does the same and more; this timer is the one-minute version.',
+    how:['Shake out your hands for 10 seconds, then your arms.','Shake out your legs, then roll your shoulders.','Finish standing tall, and notice how you feel.'],
+    visual:'none',
+    build(){
+      return [
+        {cue:'Shake out your hands', ms:10000, sub:'Loose and quick'},
+        {cue:'Shake out your arms', ms:10000, sub:'Let them flap freely'},
+        {cue:'Shake out your legs', ms:10000, sub:'Small bounces are fine'},
+        {cue:'Roll your shoulders', ms:10000, sub:'Slow circles, both directions'},
+        {cue:'Shake everything loose', ms:10000, sub:'Whole body, all at once'},
+        {cue:'Stop. Stand still.', ms:10000, sub:'Notice your breath and your feet'}
+      ];
+    }}
+];
+
+let ex = null;   // active session: {def, steps, idx, left, running, last, anim, curScale, total, elapsed, tid}
+
+const exToday = () => {
+  const log = store.get('exlog', {});
+  return log[todayStr()] || [];
+};
+
+function renderExercises(){
+  const done = exToday();
+  const next = EXERCISES.find(e => !done.includes(e.id));
+  $('exProgTxt').textContent = `${done.length} of ${EXERCISES.length} done today`;
+  $('exDots').innerHTML = EXERCISES.map(e => `<span class="${done.includes(e.id) ? 'on' : ''}"></span>`).join('');
+  $('exList').innerHTML = EXERCISES.map((e, i) => `
+    <button class="ex-card ${done.includes(e.id) ? 'done' : ''} ${next && next.id === e.id ? 'next' : ''}" data-ex="${e.id}">
+      <span class="top"><span class="n">${String(i+1).padStart(2,'0')}</span><span class="tick" aria-hidden="true"></span></span>
+      <h3>${e.name}</h3>
+      <p>${e.tag}</p>
+      <span class="len">${e.len}</span>
+    </button>`).join('');
+  $('exList').querySelectorAll('[data-ex]').forEach(b => b.onclick = () => openExercise(b.dataset.ex));
+}
+
+function showExPanel(which){                 // 'intro' | 'run' | 'done' | null (list only)
+  $('exHome').hidden = which !== null;
+  $('exSession').hidden = which === null;
+  $('exIntro').hidden = which !== 'intro';
+  $('exRun').hidden   = which !== 'run';
+  $('exDone').hidden  = which !== 'done';
+  $('exSession').classList.remove('paused');
+}
+
+function openExercise(id){
+  const def = EXERCISES.find(e => e.id === id);
+  if(!def) return;
+  clearExercise();
+  const steps = def.build();
+  ex = {def, steps, idx:0, left:0, running:false, last:0, anim:null, curScale:0.55,
+        total: steps.reduce((a, s) => a + s.ms, 0), elapsed:0, tid:null};
+  const no = EXERCISES.indexOf(def) + 1;
+  $('exIntroNo').textContent = `Exercise ${no} of ${EXERCISES.length}`;
+  $('exIntroName').textContent = def.name;
+  $('exIntroDesc').textContent = def.intro;
+  $('exIntroHow').innerHTML = def.how.map(h => `<li>${esc(h)}</li>`).join('');
+  $('exIntroMeta').textContent = `${def.len} · you can pause or stop any time`;
+  $('exRunName').textContent = def.name;
+  $('exCircle').style.transform = 'scale(0.55)';
+  $('exCircle').parentElement.classList.toggle('none', def.visual !== 'breath');
+  $('exBar').style.transform = 'scaleX(0)';
+  showExPanel('intro');
+  $('exSession').scrollIntoView({behavior: reduce.matches ? 'auto' : 'smooth', block:'start'});
+}
+
+function startExercise(){
+  if(!ex) return;
+  ex.running = true;
+  ex.last = performance.now();
+  showExPanel('run');
+  $('exPause').textContent = 'Pause';
+  startStep(0);
+  clearInterval(ex.tid);
+  ex.tid = setInterval(exTick, 100);
+}
+
+function startStep(i){
+  const st = ex.steps[i];
+  ex.idx = i;
+  ex.left = st.ms;
+  $('exCue').textContent = st.cue;
+  $('exSub').textContent = st.sub || '';
+  if(ex.def.visual === 'breath') animateCircle(st.s, st.ms);
+}
+
+function animateCircle(to, ms){
+  const el = $('exCircle');
+  if(!el.animate || reduce.matches){
+    el.style.transform = `scale(${to})`; ex.curScale = to; return;
+  }
+  if(ex.anim) ex.anim.cancel();
+  ex.anim = el.animate(
+    [{transform:`scale(${ex.curScale})`}, {transform:`scale(${to})`}],
+    {duration: ms, easing:'ease-in-out', fill:'forwards'});
+  if(!ex.running) ex.anim.pause();
+  ex.curScale = to;
+}
+
+function exTick(){
+  if(!ex || !ex.running) return;
+  const now = performance.now();
+  const dt = Math.min(now - ex.last, 250);     // ignore long gaps (e.g. a suspended tab)
+  ex.last = now;
+  ex.left -= dt;
+  ex.elapsed += dt;
+  $('exCount').textContent = `${Math.max(0, Math.ceil(ex.left / 1000))}s`;
+  $('exBar').style.transform = `scaleX(${Math.min(1, ex.elapsed / ex.total)})`;
+  if(ex.left <= 0){
+    if(ex.idx + 1 >= ex.steps.length){ finishExercise(); return; }
+    const carry = -ex.left;                    // keep the small overshoot so timing stays even
+    startStep(ex.idx + 1);
+    ex.left -= carry;
+  }
+}
+
+function pauseExercise(){
+  if(!ex || !ex.running) return;
+  ex.running = false;
+  if(ex.anim) ex.anim.pause();
+  $('exPause').textContent = 'Resume';
+  $('exSub').textContent = 'Paused. Take your time.';
+  $('exSession').classList.add('paused');
+}
+
+function resumeExercise(){
+  if(!ex || ex.running) return;
+  ex.running = true;
+  ex.last = performance.now();
+  if(ex.anim) ex.anim.play();
+  $('exPause').textContent = 'Pause';
+  $('exSub').textContent = ex.steps[ex.idx].sub || '';
+  $('exSession').classList.remove('paused');
+}
+
+function toggleExercise(){
+  if(!ex) return;
+  ex.running ? pauseExercise() : resumeExercise();
+}
+
+function clearExercise(){
+  if(ex && ex.tid) clearInterval(ex.tid);
+  if(ex && ex.anim) ex.anim.cancel();
+  ex = null;
+}
+
+function endExercise(){                       // stop without saving
+  clearExercise();
+  showExPanel(null);
+  renderExercises();
+}
+
+function finishExercise(){
+  const id = ex.def.id;
+  clearExercise();
+  const log = store.get('exlog', {});
+  const t = todayStr();
+  log[t] = [...new Set([...(log[t] || []), id])];
+  store.set('exlog', log);
+  const left = EXERCISES.length - log[t].length;
+  $('exDoneTxt').textContent = left > 0
+    ? `That one is saved for today. ${left} more to go whenever you feel ready.`
+    : 'All five exercises done for today. Your body thanks you.';
+  showExPanel('done');
+  renderExercises();
+}
+
+$('exReady').onclick = startExercise;
+$('exPause').onclick = toggleExercise;
+$('exStop').onclick  = endExercise;
+$('exBack').onclick  = endExercise;
+$('exDoneBtn').onclick = () => { showExPanel(null); renderExercises(); };
+document.addEventListener('visibilitychange', () => { if(document.hidden) pauseExercise(); });
 
 /* boot */
 showStep(0);
