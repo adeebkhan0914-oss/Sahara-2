@@ -495,3 +495,7 @@ input[type=range]{ width:100%; accent-color:var(--accent); }
   .ex-stage{ height:200px; }
   .ex-circle{ width:150px; height:150px; }
 }
+
+.ex-art{ width:100%; aspect-ratio:4/3; object-fit:cover; border-radius:12px; margin-bottom:6px; background:var(--wash); }
+.ex-card .ex-art{ margin-bottom:8px; }
+.ex-art-lg{ max-width:420px; margin:0 auto 18px; display:block; }
