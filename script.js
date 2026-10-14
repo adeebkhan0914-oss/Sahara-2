@@ -958,7 +958,7 @@ setInterval(() => {
    paused at any time, and a daily log kept in localStorage ("exlog").      */
 const EX_ROUNDS = 4;
 const EXERCISES = [
-  { id:'box', name:'Box breathing', len:'About 1 min', tag:'Slow, even breaths',
+  { id:'box', img:'ex/1-box.png', name:'Box breathing', len:'About 1 min', tag:'Slow, even breaths',
     intro:'Breathe in a square: four counts in, hold, out, hold. The circle grows as you breathe in and shrinks as you breathe out.',
     how:['Sit up tall and let your shoulders drop.','Follow the circle and match it to your breath.','Repeat for four rounds.'],
     visual:'breath',
@@ -973,7 +973,7 @@ const EXERCISES = [
       }
       return out;
     }},
-  { id:'pmr', name:'Progressive muscle relaxation', len:'About 1 min', tag:'Tense, then let go',
+  { id:'pmr', img:'ex/2-pmr.png', name:'Progressive muscle relaxation', len:'About 1 min', tag:'Tense, then let go',
     intro:'Squeeze one group of muscles at a time, then let it melt. Tension and release teach your body the difference.',
     how:['Sit or lie down somewhere comfortable.','Squeeze each area for 5 seconds, then release for 6.','Notice how the release feels.'],
     visual:'breath',
@@ -993,7 +993,7 @@ const EXERCISES = [
       });
       return out;
     }},
-  { id:'ground', name:'5-4-3-2-1 grounding', len:'About 1 min', tag:'Come back to the room',
+  { id:'ground', img:'ex/3-grounding.png', name:'5-4-3-2-1 grounding', len:'About 1 min', tag:'Come back to the room',
     intro:'Anchor yourself in the present, one sense at a time. Name each thing out loud or in your head.',
     how:['Look around and name 5 things you can see.','Then 4 things you can feel, 3 you can hear, 2 you can smell, 1 you can taste.','Take your time. There is no rush.'],
     visual:'none',
@@ -1006,7 +1006,7 @@ const EXERCISES = [
         {cue:'Taste 1 thing', ms:12000, sub:'Notice whatever is in your mouth'}
       ];
     }},
-  { id:'pose', name:"Child's pose", len:'About 1.5 min', tag:'Slow breaths, forward fold',
+  { id:'pose', img:'ex/4-child-pose.png', name:"Child's pose", len:'About 1.5 min', tag:'Slow breaths, forward fold',
     intro:'Kneel, fold forward and breathe slowly into your back. Let the exhale be a little longer than the inhale.',
     how:['Kneel, sit your hips back toward your heels, and fold forward with your arms long.','Rest your forehead down, or onto a cushion.','Breathe slowly and let each out-breath soften you.'],
     visual:'breath',
@@ -1018,7 +1018,7 @@ const EXERCISES = [
       }
       return out;
     }},
-  { id:'walk', name:'Shake out or walk', len:'1 min shake-out', tag:'Move the tension out',
+  { id:'walk', img:'ex/5-walk.png', name:'Shake out or walk', len:'1 min shake-out', tag:'Move the tension out',
     intro:'Shake the stress out of your body. If you can, a brisk 10 to 15 minute walk does the same and more; this timer is the one-minute version.',
     how:['Shake out your hands for 10 seconds, then your arms.','Shake out your legs, then roll your shoulders.','Finish standing tall, and notice how you feel.'],
     visual:'none',
@@ -1048,6 +1048,7 @@ function renderExercises(){
   $('exDots').innerHTML = EXERCISES.map(e => `<span class="${done.includes(e.id) ? 'on' : ''}"></span>`).join('');
   $('exList').innerHTML = EXERCISES.map((e, i) => `
     <button class="ex-card ${done.includes(e.id) ? 'done' : ''} ${next && next.id === e.id ? 'next' : ''}" data-ex="${e.id}">
+      <img class="ex-art" src="${e.img}" alt="" loading="lazy" />
       <span class="top"><span class="n">${String(i+1).padStart(2,'0')}</span><span class="tick" aria-hidden="true"></span></span>
       <h3>${e.name}</h3>
       <p>${e.tag}</p>
@@ -1074,6 +1075,8 @@ function openExercise(id){
         total: steps.reduce((a, s) => a + s.ms, 0), elapsed:0, tid:null};
   const no = EXERCISES.indexOf(def) + 1;
   $('exIntroNo').textContent = `Exercise ${no} of ${EXERCISES.length}`;
+  $('exIntroImg').src = def.img;
+  $('exIntroImg').alt = def.name + ' illustration';
   $('exIntroName').textContent = def.name;
   $('exIntroDesc').textContent = def.intro;
   $('exIntroHow').innerHTML = def.how.map(h => `<li>${esc(h)}</li>`).join('');
