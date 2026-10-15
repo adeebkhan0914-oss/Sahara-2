@@ -249,7 +249,7 @@ function paintGauge(s){
 
 /* ---------------- charts (Chart.js) ---------------- */
 const charts = {};
-const INK2 = '#646B73';
+const cssVar = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 const thresholdPlugin = {
   id: 'thresholds',
   afterDraw(chart, args, opts){
@@ -263,7 +263,7 @@ const thresholdPlugin = {
       const py = y.getPixelForValue(v);
       ctx.setLineDash([4,4]); ctx.strokeStyle = 'rgba(30,35,40,.26)';
       ctx.beginPath(); ctx.moveTo(left, py); ctx.lineTo(right, py); ctx.stroke();
-      ctx.setLineDash([]); ctx.fillStyle = INK2;
+      ctx.setLineDash([]); ctx.fillStyle = cssVar('--ink-2');
       ctx.fillText(label, right-4, py-5);
     });
     ctx.restore();
@@ -307,14 +307,14 @@ function lineChart(id, labels, data, o){
         legend: { display: false },
         thresholds: { show: !!o.thresholds },
         tooltip: {
-          backgroundColor: '#1E2328', padding: 10, cornerRadius: 10, displayColors: false,
+          backgroundColor: cssVar('--paper'), titleColor: cssVar('--ink'), bodyColor: cssVar('--ink'), borderColor: cssVar('--line'), borderWidth: 1, padding: 10, cornerRadius: 10, displayColors: false,
           titleFont: { family: 'Hanken Grotesk', weight: '600' }, bodyFont: { family: 'Hanken Grotesk' },
           callbacks: { label: ctx => `${o.label} ${ctx.parsed.y}${o.unit || ''}` }
         }
       },
       scales: {
-        x: { grid: { display: false }, border: { display: false }, ticks: { color: INK2, font: { family: 'Hanken Grotesk', size: 11 }, maxRotation: 0, autoSkipPadding: 12 } },
-        y: { min: o.min, max: o.max, grid: { color: '#EEEEEA' }, border: { display: false }, ticks: { color: INK2, font: { family: 'Hanken Grotesk', size: 11 }, stepSize: o.step } }
+        x: { grid: { display: false }, border: { display: false }, ticks: { color: cssVar('--ink-2'), font: { family: 'Hanken Grotesk', size: 11 }, maxRotation: 0, autoSkipPadding: 12 } },
+        y: { min: o.min, max: o.max, grid: { color: cssVar('--line') }, border: { display: false }, ticks: { color: cssVar('--ink-2'), font: { family: 'Hanken Grotesk', size: 11 }, stepSize: o.step } }
       }
     }
   });
@@ -914,7 +914,7 @@ setInterval(() => {
     ctx.clearRect(0, 0, W, H);
 
     ctx.lineCap = 'round';
-    ctx.strokeStyle = 'rgba(46,96,88,.32)';
+    ctx.strokeStyle = document.documentElement.dataset.theme === 'dark' ? 'rgba(170,215,205,.26)' : 'rgba(46,96,88,.32)';
     for(const b of branches){
       ctx.lineWidth = b.w * 1.4;
       ctx.beginPath(); ctx.moveTo(b.x1, b.y1); ctx.lineTo(b.x2, b.y2); ctx.stroke();
@@ -1196,6 +1196,21 @@ $('exStop').onclick  = endExercise;
 $('exBack').onclick  = endExercise;
 $('exDoneBtn').onclick = () => { showExPanel(null); renderExercises(); };
 document.addEventListener('visibilitychange', () => { if(document.hidden) pauseExercise(); });
+
+/* ---------------- appearance (light default, dark opt-in) ---------------- */
+function applyTheme(mode){
+  const dark = mode === 'dark';
+  document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+  $('setDark').checked = dark;
+}
+function setTheme(dark){
+  store.set('theme', dark ? 'dark' : 'light');
+  applyTheme(dark ? 'dark' : 'light');
+  Object.keys(charts).forEach(k => { charts[k].destroy(); delete charts[k]; });   // rebuild charts in the new colours
+  renderAll();
+}
+$('setDark').onchange = e => setTheme(e.target.checked);
+applyTheme(store.get('theme', 'light'));
 
 /* boot */
 showStep(0);
