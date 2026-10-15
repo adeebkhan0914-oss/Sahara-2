@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<script>try{ if(localStorage.getItem("sahara_theme")=='"dark"') document.documentElement.dataset.theme="dark"; }catch(e){}</script>
 <title>sahara. | Continuous trauma healing and distress monitoring</title>
 <meta name="description" content="Sahara is a consent-driven companion that listens, tracks stress signals and guides survivors toward help." />
 
@@ -344,6 +345,11 @@
         <h1 class="page-title">Settings</h1>
         <p class="page-sub">Dignity, autonomy and safety. You are always in control.</p>
         <div class="grid g2">
+          <div class="panel">
+            <h3 class="panel-title">Appearance</h3>
+            <div class="set-row"><div><div class="t">Dark mode</div><div class="s">Easier on the eyes at night. Light is the default.</div></div>
+              <label class="switch"><input type="checkbox" id="setDark" aria-label="Dark mode"><span class="slider"></span></label></div>
+          </div>
           <div class="panel">
             <h3 class="panel-title">Privacy and consent</h3>
             <div class="set-row"><div><div class="t">Health telemetry (Google Fit)</div><div class="s">Heart rate and sleep tracking</div></div>
