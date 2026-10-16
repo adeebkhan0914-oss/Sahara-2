@@ -1,0 +1,61 @@
+/* =====================================================================
+   sahara. | AI companion endpoint (Vercel serverless function)
+   The browser POSTs { messages, lang, name } to /api/chat.
+   The Gemini key lives ONLY on the server, in the environment variable
+   GEMINI_API_KEY. It is never sent to the browser or stored in the repo.
+===================================================================== */
+const MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions';
+const MAX_MESSAGES = 12, MAX_CHARS = 1000;
+const LANGS = { en:'English', hi:'Hindi', ta:'Tamil', bn:'Bengali', mr:'Marathi' };
+
+function systemPrompt(name, lang){
+  const langLine = lang && LANGS[lang] && lang !== 'en' ? `Reply in ${LANGS[lang]}.` : 'Reply in English.';
+  const who = name ? `the user, named ${String(name).slice(0, 40)}` : 'the user';
+  return `You are Sahara, a warm, empathetic AI companion for ${who}, who may be a trauma survivor. You are NOT a doctor and never diagnose.
+Rules:
+- ${langLine}
+- Keep replies short (2-4 sentences), gentle, non-clinical, like a caring friend.
+- Validate feelings first. Offer one small, concrete coping step when it fits (breathing, grounding, a short walk).
+- If the user mentions self-harm, suicide, or being in danger, respond with care, encourage them to contact a crisis line or someone they trust right now, and never give methods.
+- Never claim to be a human. Never promise medical outcomes.`;
+}
+
+module.exports = async function handler(req, res){
+  if(req.method !== 'POST'){ res.setHeader('Allow', 'POST'); return res.status(405).json({ error: 'Use POST' }); }
+
+  const key = process.env.GEMINI_API_KEY;
+  if(!key) return res.status(503).json({ error: 'AI is not configured on the server' });
+
+  let body = req.body;
+  if(typeof body === 'string'){ try{ body = JSON.parse(body); }catch(e){ body = null; } }
+  if(!body || !Array.isArray(body.messages)) return res.status(400).json({ error: 'Expected { messages: [...] }' });
+
+  // keep only the latest turns, and only plain user/assistant text
+  const messages = body.messages
+    .filter(m => m && (m.role === 'user' || m.role === 'assistant') && typeof m.content === 'string')
+    .slice(-MAX_MESSAGES)
+    .map(m => ({ role: m.role, content: m.content.slice(0, MAX_CHARS) }));
+  if(!messages.length || messages[messages.length - 1].role !== 'user')
+    return res.status(400).json({ error: 'Last message must be from the user' });
+
+  try{
+    const upstream = await fetch(GEMINI_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
+      body: JSON.stringify({
+        model: MODEL,
+        messages: [{ role: 'system', content: systemPrompt(body.name, body.lang) }, ...messages],
+        temperature: 0.8,
+        max_tokens: 250
+      })
+    });
+    if(!upstream.ok) return res.status(502).json({ error: 'AI provider returned ' + upstream.status });
+    const data = await upstream.json();
+    const reply = data.choices?.[0]?.message?.content?.trim();
+    if(!reply) return res.status(502).json({ error: 'Empty reply' });
+    return res.status(200).json({ reply });
+  }catch(err){
+    return res.status(502).json({ error: 'AI provider unreachable' });
+  }
+};
