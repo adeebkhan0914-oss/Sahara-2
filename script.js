@@ -14,7 +14,6 @@ let profile  = store.get('profile', null);            // {name, lang, consent, f
 let vitals   = store.get('vitals', null);             // 14 days of simulated telemetry
 let checkins = store.get('checkins', []);             // {date, mood, stress, note}
 let chats    = store.get('chats', []);                // {role:'user'|'ai'|'sys', text}
-let aiCfg    = store.get('aicfg', {base:'', key:'', model:''});
 let ttsOn    = store.get('tts', true);
 
 const LANG_NAMES   = {en:'English', hi:'हिन्दी', ta:'தமிழ்', bn:'বাংলা', mr:'मराठी'};
@@ -136,8 +135,7 @@ function finishOnboard(){
     tone: DEFAULT_TONE,
     since: todayStr()
   };
-  aiCfg = { base: $('obApiBase').value.trim(), key: $('obApiKey').value.trim(), model: $('obModel').value.trim() || 'gpt-4o-mini' };
-  store.set('profile', profile); store.set('aicfg', aiCfg);
+  store.set('profile', profile);
   enterApp(true);
   loadSettings();
 }
@@ -439,18 +437,6 @@ function userDistress(text){
   return 0;                               // neutral
 }
 
-function systemPrompt(){
-  const s = currentStress(), t = vitals[vitals.length-1];
-  const langLine = profile.lang === 'en' ? 'English' : `the user's language (${LANG_NAMES[profile.lang]})`;
-  return `You are Sahara, a warm, empathetic AI companion for a trauma survivor named ${profile.name}. You are NOT a doctor and never diagnose.
-Rules:
-- Speak only in ${langLine}. Keep replies short (2-4 sentences), gentle, non-clinical, like a caring friend.
-- Never force assessments or ask questionnaires. Use casual conversation to gauge feelings (Top Tier).
-- If the user sounds low, acknowledge first, then gently offer ONE grounding option (Middle Tier).
-- NEVER repeat their trauma back to them or push for details. Follow their pace.
-- If there is any hint of self-harm or crisis: respond with care, stay with them, and tell them you can open the Safety Hub with people to call. You are not an emergency service.
-Context (private, consent-driven): today's stress index ${s}/100, resting HR ${t.hr} bpm, sleep ${t.sleep}h. Weave this in at most subtly, if useful.`;
-}
 
 function offlineReply(text, level){
   const name = profile.name;
@@ -480,30 +466,24 @@ function offlineReply(text, level){
 }
 
 async function aiReply(text, level){
-  const hasApi = aiCfg.base && aiCfg.key;
-  if(!hasApi) return { text: offlineReply(text, level), src:'offline' };
   try{
-    const url = aiCfg.base.replace(/\/+$/,'') + '/chat/completions';
-    const res = await fetch(url, {
-      method:'POST',
-      headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer '+aiCfg.key },
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: aiCfg.model || 'gpt-4o-mini',
+        name: profile.name, lang: profile.lang,
         messages: [
-          {role:'system', content: systemPrompt()},
           ...chats.slice(-10).filter(c => c.role !== 'sys').map(c => ({role: c.role === 'ai' ? 'assistant' : 'user', content: c.text})),
           {role:'user', content: text}
-        ],
-        temperature: 0.8, max_tokens: 250
+        ]
       })
     });
-    if(!res.ok) throw new Error('HTTP '+res.status);
+    if(!res.ok) throw new Error('HTTP ' + res.status);
     const j = await res.json();
-    const t = j.choices?.[0]?.message?.content?.trim();
-    if(!t) throw new Error('empty');
-    return { text: t, src:'api' };
+    if(!j.reply) throw new Error('empty');
+    return { text: j.reply, src:'api' };
   }catch(e){
-    toast('AI API unreachable. Using the offline engine.');
+    toast('AI is unavailable right now. Using the offline engine.');
     return { text: offlineReply(text, level), src:'offline' };
   }
 }
@@ -818,7 +798,6 @@ function setZoom(z){
 function loadSettings(){
   $('setConsent').checked = !!profile.consent;
   $('setTts').checked = ttsOn;
-  $('setApiBase').value = aiCfg.base || ''; $('setModel').value = aiCfg.model || ''; $('setApiKey').value = aiCfg.key || '';
   $('setLang').value = profile.lang || 'en';
   $('setFr').value = profile.fr || ''; $('setFrP').value = profile.frP || ''; $('setThP').value = profile.thP || '';
   $('ttsToggle').checked = ttsOn;
@@ -829,12 +808,10 @@ $('setConsent').onchange = e => {
   renderDash();
 };
 $('setTts').onchange = e => { ttsOn = e.target.checked; store.set('tts', ttsOn); $('ttsToggle').checked = ttsOn; };
-$('saveSettings').onclick = () => {
-  aiCfg = { base: $('setApiBase').value.trim(), key: $('setApiKey').value.trim(), model: $('setModel').value.trim() || 'gpt-4o-mini' };
-  profile.lang = $('setLang').value;
-  store.set('aicfg', aiCfg); store.set('profile', profile);
+$('setLang').onchange = e => {
+  profile.lang = e.target.value; store.set('profile', profile);
   $('langNote').textContent = LANG_NAMES[profile.lang] || 'English';
-  toast(aiCfg.base && aiCfg.key ? 'AI connected ✨ Sahara\'s brain is live' : 'Saved. Running on the offline engine.');
+  toast('Language saved');
 };
 $('saveContacts').onclick = () => {
   profile.fr = $('setFr').value.trim(); profile.frP = $('setFrP').value.trim(); profile.thP = $('setThP').value.trim();
